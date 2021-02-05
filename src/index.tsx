@@ -72,8 +72,17 @@ type BoardProps = {
     }
   }
 
+  type MoveData = {
+    row: number;
+    column: number;
+    piece: string;
+  };
+
   type GameState = {
-    history: { squares: string[] }[];
+    history: { 
+      squares: string[],
+      move: MoveData | null,
+    }[];
     stepNumber: number;
     xIsNext: boolean;
   };
@@ -84,6 +93,7 @@ type BoardProps = {
       this.state = {
         history: [{
           squares: Array(9).fill(null),
+          move: null,
         }],
         stepNumber: 0,
         xIsNext: true,
@@ -100,6 +110,11 @@ type BoardProps = {
       this.setState({
         history: history.concat([{
           squares: squares,
+          move: {
+            row: Math.floor(i / 3),
+            column: i % 3,
+            piece: squares[i]
+          }
         }]), 
         stepNumber: history.length,
         xIsNext: !this.state.xIsNext
@@ -118,9 +133,10 @@ type BoardProps = {
       const current = history[this.state.stepNumber];
       const winner = calculateWinner(current.squares);
 
-      const moves = history.map((step, move) => {
-        const desc = move ? "Go to move #" + move : "Go to game start";
-        return (<li key={move}><button onClick={() => this.jumpTo(move)}>{desc}</button></li>)
+      const moves = history.map((step, index) => {
+        const move = step.move ?? { row: -1, column: -1, piece: "?" };
+        const desc = index ? `Go to move #${index} (${move.row},${move.column},${move.piece})` : "Go to game start";
+        return (<li key={index}><button onClick={() => this.jumpTo(index)}>{desc}</button></li>)
       });
 
       let status;
