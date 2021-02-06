@@ -136,7 +136,7 @@ type BoardProps = {
       const moves = history.map((step, index) => {
         const move = step.move ?? { row: -1, column: -1, piece: "?" };
         const desc = index ? `Go to move #${index} (${move.row},${move.column},${move.piece})` : "Go to game start";
-        return (<li key={index}><button onClick={() => this.jumpTo(index)}>{desc}</button></li>)
+        return (<li key={index}><button className={index == history.length - 1 ? "button-bold" : ""} onClick={() => this.jumpTo(index)}>{desc}</button></li>)
       });
 
       let status;
