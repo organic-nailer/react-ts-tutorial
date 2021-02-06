@@ -2,7 +2,12 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
-function calculateWinner(squares: string[]) {
+type WinnerData = {
+  winner: string,
+  loc: number[]
+};
+
+function calculateWinner(squares: string[]): WinnerData | null {
   const lines = [
     [0,1,2],
     [3,4,5],
@@ -16,7 +21,10 @@ function calculateWinner(squares: string[]) {
   for(let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if(squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return {
+        winner: squares[a],
+        loc: lines[i]
+      };
     }
   }
   return null;
@@ -24,13 +32,14 @@ function calculateWinner(squares: string[]) {
 
 type SquareProps = {
   value: string;
+  highlight: boolean;
   onClick: () => void;
 };
 
 function Square(props: SquareProps) {
   return (
     <button 
-    className="square" 
+    className={props.highlight ? "square highlight" : "square"} 
     onClick={props.onClick }>
     {props.value}
   </button>
@@ -39,6 +48,7 @@ function Square(props: SquareProps) {
 
 type BoardProps = {
   squares: string[];
+  highlights: number[];
   onClick: (value: number) => void;
 };
   
@@ -46,6 +56,7 @@ type BoardProps = {
     renderSquare(i: number) {
       return <Square 
           value={this.props.squares[i]} 
+          highlight={this.props.highlights.includes(i)}
           onClick={() => this.props.onClick(i)} />;
     }
   
@@ -74,6 +85,7 @@ type BoardProps = {
     }[];
     stepNumber: number;
     xIsNext: boolean;
+    reverse: boolean;
   };
   
   class Game extends React.Component<any, GameState> {
@@ -86,6 +98,7 @@ type BoardProps = {
         }],
         stepNumber: 0,
         xIsNext: true,
+        reverse: false
       };
     }
     handleClick(i: number) {
@@ -110,6 +123,12 @@ type BoardProps = {
       });
     }
 
+    handleToggle(v: boolean) {
+      this.setState({
+        reverse: v
+      });
+    }
+
     jumpTo(step: number) {
       this.setState({
         history: this.state.history.slice(0, step+1),
@@ -122,6 +141,7 @@ type BoardProps = {
       const history = this.state.history;
       const current = history[this.state.stepNumber];
       const winner = calculateWinner(current.squares);
+      const finished = current.squares.every((v) => v);
 
       const moves = history.map((step, index) => {
         const move = step.move ?? { row: -1, column: -1, piece: "?" };
@@ -130,8 +150,13 @@ type BoardProps = {
       });
 
       let status;
+      let highlights: number[] = [];
       if(winner) {
-        status = "Winner: " + winner;
+        status = "Winner: " + winner.winner;
+        highlights = winner.loc;
+      }
+      else if(finished) {
+        status = "Draw";
       }
       else {
         status = 'Next player: ' + (this.state.xIsNext ? "X" : "O");
@@ -141,14 +166,46 @@ type BoardProps = {
           <div className="game-board">
             <Board
                 squares = {current.squares}
+                highlights = {highlights}
                 onClick = {(i) => this.handleClick(i)} 
             />
           </div>
           <div className="game-info">
             <div>{status}</div>
-            <ol>{moves}</ol>
+            <Toggle onToggle = {(v) => this.handleToggle(v)}/>
+            <ol>{this.state.reverse ? moves.reverse() : moves}</ol>
           </div>
         </div>
+      );
+    }
+  }
+
+  type ToggleState = {
+    isOn: boolean
+  };
+
+  type ToggleProps = {
+    onToggle: (value: boolean) => void
+  };
+
+  class Toggle extends React.Component<ToggleProps, ToggleState> {
+    constructor(props: ToggleProps) {
+      super(props);
+      this.state = {
+        isOn: false
+      };
+    }
+
+    handleClick = () => {
+      this.setState({ isOn: !this.state.isOn });
+      this.props.onToggle(this.state.isOn);
+    }
+
+    render() {
+      return (
+        <button onClick={this.handleClick}>
+          {this.state.isOn ? "↑" : "↓"}
+        </button>
       );
     }
   }
