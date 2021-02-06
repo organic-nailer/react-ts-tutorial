@@ -50,25 +50,14 @@ type BoardProps = {
     }
   
     render() {
-      return (
-        <div>
-          <div className="board-row">
-            {this.renderSquare(0)}
-            {this.renderSquare(1)}
-            {this.renderSquare(2)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(3)}
-            {this.renderSquare(4)}
-            {this.renderSquare(5)}
-          </div>
-          <div className="board-row">
-            {this.renderSquare(6)}
-            {this.renderSquare(7)}
-            {this.renderSquare(8)}
-          </div>
-        </div>
-      );
+      const squares = Array(3).fill(1).map((_, row) => { 
+        const squaresRow = Array(3).fill(1).map((_, column) => {
+          return this.renderSquare(row * 3 + column);
+        });
+        return(<div className="board-row">{squaresRow}</div>);
+      });
+      console.log(squares);
+      return (<div>{squares}</div>);
     }
   }
 
@@ -123,6 +112,7 @@ type BoardProps = {
 
     jumpTo(step: number) {
       this.setState({
+        history: this.state.history.slice(0, step+1),
         stepNumber: step,
         xIsNext: (step % 2) === 0,
       })
@@ -136,7 +126,7 @@ type BoardProps = {
       const moves = history.map((step, index) => {
         const move = step.move ?? { row: -1, column: -1, piece: "?" };
         const desc = index ? `Go to move #${index} (${move.row},${move.column},${move.piece})` : "Go to game start";
-        return (<li key={index}><button className={index == history.length - 1 ? "button-bold" : ""} onClick={() => this.jumpTo(index)}>{desc}</button></li>)
+        return (<li key={index}><button className={index === history.length - 1 ? "button-bold" : ""} onClick={() => this.jumpTo(index)}>{desc}</button></li>)
       });
 
       let status;
